@@ -1,0 +1,69 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Update
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+uint Res;
+
+RWStructuredBuffer<float> Front;
+RWStructuredBuffer<float> Back;
+
+[numthreads(8, 8, 1)]
+void Update(uint3 id : SV_DispatchThreadID)
+{
+	if (id.x >= Res || id.y >= Res)
+		return;
+
+	float C = 0.7f;
+
+	float nCount = 0;
+	float nTotal = 0;
+
+	/*
+	N	Cur	Ideal
+	0	0	0
+	1	.25	.125
+	2	.5	.25
+	3	.75	.5
+	4	1	1
+	
+	
+	
+	*/
+
+
+	int hasNeighbor;
+
+	// North
+	hasNeighbor = id.y < (Res - 1); // Needs terrain check
+	nCount += hasNeighbor;
+	nTotal += hasNeighbor * Back[id.x + Res * (id.y + 1)];
+
+	// East
+	hasNeighbor = id.x < (Res - 1); // Needs terrain check
+	nCount += hasNeighbor;
+	nTotal += hasNeighbor * Back[id.x + 1 + Res * id.y];
+
+	// South
+	hasNeighbor = id.y > 0; // Needs terrain check
+	nCount += hasNeighbor;
+	nTotal += hasNeighbor * Back[id.x + Res * (id.y - 1)];
+
+	// West
+	hasNeighbor = id.x > 0; // Needs terrain check
+	nCount += hasNeighbor;
+	nTotal += hasNeighbor * Back[id.x - 1 + Res * id.y];
+
+	if (nCount == 0) return;
+
+	//float nMod = 4 * pow(0.5f, 4 - nCount) / nCount;
+
+	int i = id.x + Res * id.y;
+	Front[i] = Back[i] + 0.99f * (Back[i] - Front[i]) + C * C * (nTotal - nCount * Back[i]); // Switch 0 to Terrain
+	//Front[i] = nCount;
+}
+
+int Flat(int x, int y) {
+	return x + Res * y;
+}
