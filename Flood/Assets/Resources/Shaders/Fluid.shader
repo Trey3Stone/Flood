@@ -6,6 +6,7 @@
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
+		//_HeightMap("Height Map", 2D) = "black" {}
     }
     SubShader
     {
@@ -13,6 +14,7 @@
         LOD 200
 
         CGPROGRAM
+
         // Physically based Standard lighting model, and enable shadows on all light types
         #pragma surface surf Standard vertex:vert fullforwardshadows addshadow
 
@@ -37,7 +39,8 @@
 		uint _Res;
 
 		#ifdef SHADER_API_D3D11
-		StructuredBuffer<float> _HeightData;
+		Texture2D _HeightMap;
+		Texture2D _Mask;
 		#endif
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
@@ -46,45 +49,108 @@
         //UNITY_INSTANCING_BUFFER_START(Props)
             // put more per-instance properties here
        // UNITY_INSTANCING_BUFFER_END(Props)
-
+		
+		const static float THETA = 0.866025403784438646763723170752936183471402626905190314027f; // sqrt(3)/2
+		static float3 NEIGHBOR_NORMAL_LATERALS[7] = {
+			float3(   0, 1,      0),
+			float3(  -1, 0,      0),
+			float3(-0.5, 0,  THETA),
+			float3( 0.5, 0,  THETA),
+			float3(   1, 0,      0),
+			float3( 0.5, 0, -THETA),
+			float3(-0.5, 0, -THETA)
+		};
+		
 		void vert(inout appdata_full v) {
 			#ifdef SHADER_API_D3D11
 
-			uint i = round(v.texcoord.x);
-			uint2 iVec = int2(i % _Res, i / _Res);
+			//uint i = round(v.texcoord.x);
+			int2 iVec = v.texcoord.xy; // UV is flipped for some reason
 
-			float height = _HeightData[i];
+			float height = _HeightMap[iVec.yx].r;
 
 			float3 offset = float3(0, height, 0);
 			v.vertex.xyz += offset;
 
+			v.normal = float3(0, 1, 0);
+			
 
 			float nCount = 0;
 			float3 nTotal = float3(0, 0, 0);
 
 			int hasNeighbor;
+			int2 nVec;
 
+			// TODO: precompute directions then multiply by neighbor difference
+			
+			// N1			
+			nVec = iVec.yx + int2(0, 1);
+			hasNeighbor = _Mask[nVec]; // Needs terrain check
+			nCount += hasNeighbor;
+			nTotal += hasNeighbor * normalize((_HeightMap[nVec].r - height) * NEIGHBOR_NORMAL_LATERALS[1] + float3(0, 1, 0));
+
+			// N2
+			nVec = iVec.yx + int2(-1, 1 - (iVec.y & 1));
+			hasNeighbor = _Mask[nVec]; // Needs terrain check
+			nCount += hasNeighbor;
+			nTotal += hasNeighbor * normalize((_HeightMap[nVec].r - height) * NEIGHBOR_NORMAL_LATERALS[2] + float3(0, 1, 0));
+			
+			// N3
+			nVec = iVec.yx + int2(-1, -(iVec.y & 1));
+			hasNeighbor = _Mask[nVec]; // Needs terrain check
+			nCount += hasNeighbor;
+			nTotal += hasNeighbor * normalize((_HeightMap[nVec].r - height) * NEIGHBOR_NORMAL_LATERALS[3] + float3(0, 1, 0));
+
+			// N4
+			nVec = iVec.yx + int2(0, -1);
+			hasNeighbor = _Mask[nVec]; // Needs terrain check
+			nCount += hasNeighbor;
+			nTotal += hasNeighbor * normalize((_HeightMap[nVec].r - height) * NEIGHBOR_NORMAL_LATERALS[4] + float3(0, 1, 0));
+
+			// N5
+			nVec = iVec.yx + int2(1, -(iVec.y & 1));
+			hasNeighbor = _Mask[nVec]; // Needs terrain check
+			nCount += hasNeighbor;
+			nTotal += hasNeighbor * normalize((_HeightMap[nVec].r - height) * NEIGHBOR_NORMAL_LATERALS[5] + float3(0, 1, 0));
+			//v.vertex.y = (_HeightMap[nVec] - height);
+
+			// N6
+			nVec = iVec.yx + int2(1, 1 - (iVec.y & 1));
+			hasNeighbor = _Mask[nVec]; // Needs terrain check
+			nCount += hasNeighbor;
+			nTotal += hasNeighbor * normalize((_HeightMap[nVec].r - height) * NEIGHBOR_NORMAL_LATERALS[6] + float3(0, 1, 0));
+			
+			//v.vertex.y = nCount;
+			//v.vertex.y = _Mask[iVec.yx];
+			//v.vertex.y = iVec.y & 1;
+
+			//v.vertex.xyz += normalize(nTotal);
+
+			v.normal = normalize(nTotal);
+
+			/*
 			// North
 			hasNeighbor = iVec.y < (_Res - 1);
 			nCount += hasNeighbor;
-			nTotal += normalize(float3(0, 1, hasNeighbor * (height - _HeightData[i + _Res])));
+			nTotal += normalize(float3(0, 1, hasNeighbor * (height - _HeightMap[iVec.xy + uint2(0, 1)].r)));
 
 			// East
 			hasNeighbor = iVec.x < (_Res - 1);
 			nCount += hasNeighbor;
-			nTotal += normalize(float3(hasNeighbor * (height - _HeightData[i + 1]), 1, 0));
+			nTotal += normalize(float3(hasNeighbor * (height -_HeightMap[iVec.xy + uint2(1, 0)].r), 1, 0));
 
 			// South
 			hasNeighbor = iVec.y > 0;
 			nCount += hasNeighbor;
-			nTotal += normalize(float3(0, 1, hasNeighbor * (_HeightData[i - _Res] - height)));
+			nTotal += normalize(float3(0, 1, hasNeighbor * (_HeightMap[iVec.xy - uint2(0, 1)].r - height)));
 
 			// West
 			hasNeighbor = iVec.x > 0;
 			nCount += hasNeighbor;
-			nTotal += normalize(float3(hasNeighbor * (_HeightData[i - 1] - height), 1, 0));
-
-			v.normal = normalize(nTotal / nCount);
+			nTotal += normalize(float3(hasNeighbor * (_HeightMap[iVec.xy - uint2(1, 0)].r - height), 1, 0));
+			*/
+			//v.normal = normalize(nTotal / nCount);
+			//v.normal = float3(0, 1, 0);
 
 			//v.normal = normalize(v.normal + offset);
 			//v.color = half4(v.normal.x, v.normal.y, v.normal.z, 1);

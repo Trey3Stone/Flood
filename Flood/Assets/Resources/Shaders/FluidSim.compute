@@ -4,18 +4,21 @@
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 
+
+
 uint Res;
 
-RWStructuredBuffer<float> Front;
-RWStructuredBuffer<float> Back;
+RWTexture2D<float> Front;
+RWTexture2D<float> Back;
+RWTexture2D<float> Mask;
 
 [numthreads(8, 8, 1)]
-void Update(uint3 id : SV_DispatchThreadID)
+void Update(int3 id : SV_DispatchThreadID)
 {
-	if (id.x >= Res || id.y >= Res)
-		return;
+	if (!Mask[id.xy]) return;
 
-	float C = 0.7f;
+	float C = 0.6f;
+	//float C = 0.3f;
 
 	float nCount = 0;
 	float nTotal = 0;
@@ -34,36 +37,67 @@ void Update(uint3 id : SV_DispatchThreadID)
 
 
 	int hasNeighbor;
+	int2 v;
 
-	// North
-	hasNeighbor = id.y < (Res - 1); // Needs terrain check
+	// N1
+	v = id.xy + int2(0, 1);
+	hasNeighbor = Mask[v]; // Needs terrain check
 	nCount += hasNeighbor;
-	nTotal += hasNeighbor * Back[id.x + Res * (id.y + 1)];
+	nTotal += hasNeighbor * Back[v];
+	
+	// N2
+	v = id.xy + int2(-1, 1 - (id.x & 1));
+	hasNeighbor = Mask[v]; // Needs terrain check
+	nCount += hasNeighbor;
+	nTotal += hasNeighbor * Back[v];
 
-	// East
-	hasNeighbor = id.x < (Res - 1); // Needs terrain check
+	// N3
+	v = id.xy + int2(-1, -(id.x & 1));
+	hasNeighbor = Mask[v]; // Needs terrain check
 	nCount += hasNeighbor;
-	nTotal += hasNeighbor * Back[id.x + 1 + Res * id.y];
-
-	// South
-	hasNeighbor = id.y > 0; // Needs terrain check
+	nTotal += hasNeighbor * Back[v];
+	
+	// N4
+	v = id.xy + int2(0, -1);
+	hasNeighbor = Mask[v]; // Needs terrain check
 	nCount += hasNeighbor;
-	nTotal += hasNeighbor * Back[id.x + Res * (id.y - 1)];
-
-	// West
-	hasNeighbor = id.x > 0; // Needs terrain check
+	nTotal += hasNeighbor * Back[v];
+	
+	// N5
+	v = id.xy + int2(1, -(id.x & 1));
+	hasNeighbor = Mask[v]; // Needs terrain check
 	nCount += hasNeighbor;
-	nTotal += hasNeighbor * Back[id.x - 1 + Res * id.y];
+	nTotal += hasNeighbor * Back[v];
+	
+	// N6
+	v = id.xy + int2(1, 1 - (id.x & 1));
+	hasNeighbor = Mask[v]; // Needs terrain check
+	nCount += hasNeighbor;
+	nTotal += hasNeighbor * Back[v];
+	
 
 	if (nCount == 0) return;
 
 	//float nMod = 4 * pow(0.5f, 4 - nCount) / nCount;
 
-	int i = id.x + Res * id.y;
-	Front[i] = Back[i] + 0.99f * (Back[i] - Front[i]) + C * C * (nTotal - nCount * Back[i]); // Switch 0 to Terrain
-	//Front[i] = nCount;
+	Front[id.xy] = Back[id.xy] + 0.995f * (Back[id.xy] - Front[id.xy]) + C * C * (nTotal - nCount * Back[id.xy]); // Switch 0 to Terrain
+	//Front[id.xy] = nCount;
 }
 
-int Flat(int x, int y) {
+int HasNeighbor(uint2 id, uint x, uint y) {
 	return x + Res * y;
 }
+
+/*
+    5---------6
+   /           \
+  /             \
+ /               \
+4        +        1
+ \               /
+  \             /
+   \           /
+    3---------2
+
+
+*/

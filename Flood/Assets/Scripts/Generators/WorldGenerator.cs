@@ -7,38 +7,47 @@ public static class WorldGenerator
 	private static GameObject worldPrefab = Resources.Load("Prefabs/World") as GameObject;
 
 
-	public static World Create(int size) {
+	public static World Create(int sideLength) {
 		Debug.Log("WorldGenerator Create");
 		World outWorld = GameObject.Instantiate(worldPrefab).GetComponent<World>();
-		CreateWorld(outWorld, size);
+		CreateWorld(outWorld, sideLength);
 
 		return outWorld;
 	}
 
-	private static void CreateWorld(World world, int size) {
+	private static void CreateWorld(World world, int sideLength) {
 		Mesh mesh = new Mesh();
 		mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+		Vector2 worldSize = new Vector2(2 * sideLength, 2 * HexHelper.THETA * sideLength);
 
-		int res = size + 1;
+
+
+		int gridX = 2 * sideLength + 1; // TODO: redundant
+		int gridY = 2 * sideLength + 1;
+
 
 		// Creating vertices.
-		float[,] grid = new float[res, res];
-
-		for (int ix = 0; ix < res; ix++) {
-			for (int iz = 0; iz < res; iz++) {
+		float[,] heightGrid = new float[gridX, gridY];
+		HexHelper.FillHexGrid(heightGrid, sideLength);
+		/*
+		for (int ix = 0; ix < gridX; ix++) {
+			for (int iz = 0; iz < gridY; iz++) {
 				int height = 0;
-				grid[ix, iz] = height;
+				heightGrid[ix, iz] = height;
 			}
-		}
+		}*/
 
 		// Compiling triangles
-		mesh.vertices = MeshHelper.GridToVerts(size, grid);
-		mesh.triangles = MeshHelper.GridTriCoords(res);
+		int[,] iGrid = new int[gridX, gridY];
+		mesh.vertices = MeshHelper.HexGridToVerts(worldSize, heightGrid, iGrid);
+		mesh.triangles = MeshHelper.HexGridToTris(iGrid);
 
 		// TODO: Consider vertex doubling.
 		mesh.RecalculateNormals();
 
-		world.Load(size, grid, mesh);
+		RenderTexture worldTexture = HexHelper.HexTexture(heightGrid);
+
+		world.Load(worldSize, heightGrid, mesh, worldTexture);
 	}
 
 	/*

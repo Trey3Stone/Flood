@@ -13,6 +13,8 @@ public class FluidManager : MonoSingleton<FluidManager>
 
 	private Fluid fluid;
 
+	private RenderTexture fluidMask;
+
 	private int res;
 
 	protected override void DerivedAwake() {
@@ -31,10 +33,13 @@ public class FluidManager : MonoSingleton<FluidManager>
 		//print("UP!");
 		// TODO: Move to FixedUpdate?
 
+		//if (!fluidBuffer.Front.IsCreated()) fluidBuffer.Front.Create();
+		//if (!fluidBuffer.Back.IsCreated()) fluidBuffer.Back.Create();
+
 		fluidBuffer.Swap();
 
-		fluidSim.SetBuffer(updateKernel, "Front", fluidBuffer.Front);
-		fluidSim.SetBuffer(updateKernel, "Back", fluidBuffer.Back);
+		fluidSim.SetTexture(updateKernel, "Front", fluidBuffer.Front);
+		fluidSim.SetTexture(updateKernel, "Back", fluidBuffer.Back);
 
 		fluidSim.Dispatch(updateKernel, 1 + res / THREAD_GROUP_SIZE, 1 + res / THREAD_GROUP_SIZE, 1);
 
@@ -45,19 +50,28 @@ public class FluidManager : MonoSingleton<FluidManager>
 		fluid.SetHeight(fluidBuffer.Front);
 	}
 
-	public void Start(int size) {
-		res = size + 1;
+	public void Start(int sideLength) {
+		res = 2 * sideLength + 1;
 		print("START!");
 
 		fluid = FluidGenerator.Create(GameManager.SIZE);
 
+		float[,] maskGrid = new float[res, res];
+		HexHelper.FillHexGrid(maskGrid, sideLength);
+		fluidMask = HexHelper.HexMask(maskGrid);
+
 		fluidSim.SetInt("Res", res);
+		fluidSim.SetTexture(updateKernel, "Mask", fluidMask);
 
-		fluidBuffer = new SwapBuffer(res * res, 4);
+		fluid.SetMask(fluidMask);
+
+		//var test = new RenderTexture(2 * size + 1, 2 * size + 1, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
+
+		fluidBuffer = new SwapBuffer(fluid.HeightMap);
 
 
 
-		Test(size);
+		//Test(size);
 	}
 
 	private void Test(int size) {
@@ -71,9 +85,9 @@ public class FluidManager : MonoSingleton<FluidManager>
 				total += data[i];
 		}
 
-		fluidBuffer.Front.SetData(data);
-		fluidBuffer.Back.SetData(data);
-
+		//fluidBuffer.Front.SetData(data);
+		//fluidBuffer.Back.SetData(data);
+		/*
 		float height = total / (res * res);
 		Vector3 pos;
 		GameObject testWall;
@@ -109,6 +123,7 @@ public class FluidManager : MonoSingleton<FluidManager>
 		pos += new Vector3(0, height / 2, 0);
 		testWall.transform.position = pos;
 		testWall.transform.localScale = new Vector3(1, height, size + 2);
+		*/
 	}
 
 	public void Save() {
@@ -120,22 +135,26 @@ public class FluidManager : MonoSingleton<FluidManager>
 	}
 
 
-	class SwapBuffer
+	class SwapBuffer // Use customrendertexture?
 	{
 		private bool isSwapped = false;
 
-		private ComputeBuffer buffer1;
-		private ComputeBuffer buffer2;
+		private RenderTexture buffer1;
+		private RenderTexture buffer2;
 
-		public ComputeBuffer Front { get { return isSwapped ? buffer2 : buffer1; } }
-		public ComputeBuffer Back { get { return isSwapped ? buffer1 : buffer2; } }
+		public RenderTexture Front { get { return isSwapped ? buffer2 : buffer1; } }
+		public RenderTexture Back { get { return isSwapped ? buffer1 : buffer2; } }
 
-		public SwapBuffer(int count, int stride) {
-			buffer1 = new ComputeBuffer(count, stride);
-			buffer1.name = "SwapBuffer1";
+		public SwapBuffer(RenderTexture texture) {
 
-			buffer2 = new ComputeBuffer(count, stride);
-			buffer2.name = "SwapBuffer2";
+			buffer1 = texture;
+
+			buffer2 = new RenderTexture(texture);
+
+			buffer2.filterMode = FilterMode.Trilinear;
+			buffer2.wrapMode = TextureWrapMode.Mirror;
+			Graphics.Blit(buffer1, buffer2);
+			
 		}
 
 		public void Swap() {

@@ -44,6 +44,75 @@ public static class MeshHelper
 		return new Vector3(x - halfSize, 0, z - halfSize);
 	}
 
+	public static int[] HexGridToTris(int[,] iGrid) {
+		// Creating triangles.
+		List<int> tris = new List<int>();
+
+		int width = iGrid.GetLength(0);
+		int height = iGrid.GetLength(1);
+
+		for (int ix = 0; ix < width; ix++) {
+			for (int iz = 0; iz < height - 1; iz++) {
+				if (ix + 1 - (iz & 1) >= width) continue;
+				int v0 = iGrid[ix, iz]; // FlattenCoords(res, ix, iz);
+				int v2 = iGrid[ix + 1 - (iz & 1), iz + 1]; // FlattenCoords(res, ix + (iz & 1), iz + 1);
+
+				if (v0 == -1 || v2 == -1) continue;
+
+				// Adding triangle 1.
+				if (ix < width - 1) {
+					int v1 = iGrid[ix + 1, iz]; // FlattenCoords(res, ix + 1, iz);
+					if (v1 != -1) {
+						tris.Add(v0);
+						tris.Add(v2);
+						tris.Add(v1);
+					}
+				}
+
+				// Adding triangle 2.
+				if (ix >= (iz & 1)) {
+					int v3 = iGrid[ix + 1 - (iz & 1) - 1, iz + 1]; // FlattenCoords(res, ix + (iz & 1) - 1, iz + 1);
+					if (v3 != -1) {
+						tris.Add(v0);
+						tris.Add(v3);
+						tris.Add(v2);
+					}
+				}
+			}
+		}
+
+		return tris.ToArray();
+	}
+
+	// Modifies iGrid
+	public static Vector3[] HexGridToVerts(Vector2 worldSize, float[,] heightGrid, int[,] iGrid) {
+		int gridWidth = heightGrid.GetLength(0);
+		int gridHeight = heightGrid.GetLength(1);
+
+		Vector3[] outVerts = new Vector3[gridWidth * gridHeight];
+		//iGrid = new int[gridWidth, gridHeight];
+
+		int i = 0;
+		for (int ix = 0; ix < gridWidth; ix++) {
+			for (int iz = 0; iz < gridHeight; iz++) {
+				if (heightGrid[ix, iz] < 0) {
+					iGrid[ix, iz] = -1;
+				} else {
+					Vector3 testVert = HexToWorld(gridWidth, gridHeight, worldSize, ix, iz) + new Vector3(0, heightGrid[ix, iz], 0);
+					outVerts[i] = testVert;
+					iGrid[ix, iz] = i;
+					i++;
+				}
+			}
+		}
+
+		return outVerts;
+	}
+
+	public static Vector3 HexToWorld(int gridWidth, int gridHeight, Vector2 worldSize, int x, int z) {
+		return new Vector3(worldSize.x * ((x + 0.5f * (1 - (z & 1))) / (gridWidth - 1.0f) - 0.5f), 0, worldSize.y * (z / (gridHeight - 1.0f) - 0.5f));
+	}
+
 	public static int FlattenCoords(int rowSize, int x, int y) {
 		return x + y * rowSize;
 	}
