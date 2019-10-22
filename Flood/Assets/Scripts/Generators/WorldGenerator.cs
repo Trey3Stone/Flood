@@ -29,13 +29,17 @@ public static class WorldGenerator
 		// Creating vertices.
 		float[,] heightGrid = new float[gridX, gridY];
 		HexHelper.FillHexGrid(heightGrid, sideLength);
-		/*
+		
 		for (int ix = 0; ix < gridX; ix++) {
-			for (int iz = 0; iz < gridY; iz++) {
-				int height = 0;
-				heightGrid[ix, iz] = height;
+			for (int iy = 0; iy < gridY; iy++) {
+				if (heightGrid[ix, iy] < 0)
+					continue;
+
+				int height = (iy < gridY/2) ? 2 : 0;
+				heightGrid[ix, iy] = height;
 			}
-		}*/
+		}
+
 
 		// Compiling triangles
 		int[,] iGrid = new int[gridX, gridY];

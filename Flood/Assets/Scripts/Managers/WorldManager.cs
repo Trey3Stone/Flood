@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class WorldManager : MonoSingleton<WorldManager>
 {
-	private World world;
+	public World World { get; private set; }
 
 	// Start is called before the first frame update
 	void Start()
@@ -20,7 +20,7 @@ public class WorldManager : MonoSingleton<WorldManager>
 
 	public void Create(int size) {
 		print("WorldManager Create");
-		world = WorldGenerator.Create(size);
+		World = WorldGenerator.Create(size);
 	}
 
 	public void Save(string name) {

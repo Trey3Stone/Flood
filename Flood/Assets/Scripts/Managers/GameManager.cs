@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameManager : MonoSingleton<GameManager>
 {
-	public const int SIZE = 255; // Must be odd. Ideally power of 2 - 1
+	public const int SIZE = 127; // Must be odd. Ideally power of 2 - 1
 
 	public bool Paused { get; set; } = false;
 	protected override void DerivedAwake() {

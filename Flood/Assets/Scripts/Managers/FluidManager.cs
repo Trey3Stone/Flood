@@ -47,7 +47,7 @@ public class FluidManager : MonoSingleton<FluidManager>
 
 		//print(fluidBuffer.Front.IsValid());
 
-		fluid.SetHeight(fluidBuffer.Front);
+		fluid.SetFluidMap(fluidBuffer.Front);
 	}
 
 	public void Start(int sideLength) {
@@ -62,8 +62,10 @@ public class FluidManager : MonoSingleton<FluidManager>
 
 		fluidSim.SetInt("Res", res);
 		fluidSim.SetTexture(updateKernel, "Mask", fluidMask);
+		fluidSim.SetTexture(updateKernel, "Terrain", WorldManager.Self.World.HeightMap);
 
 		fluid.SetMask(fluidMask);
+		fluid.SetTerrainMap(WorldManager.Self.World.HeightMap);
 
 		//var test = new RenderTexture(2 * size + 1, 2 * size + 1, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
 

@@ -10,7 +10,19 @@ uint Res;
 
 RWTexture2D<float> Front;
 RWTexture2D<float> Back;
+RWTexture2D<float> Terrain;
 RWTexture2D<float> Mask;
+
+// int3(x, y, useOddOffset)
+static const int3 NEIGHBOR_OFFSETS[7] = {
+	int3(  0,  0,  0),
+	int3(  0,  1,  0),
+	int3( -1,  1,  1),
+	int3( -1,  0,  1),
+	int3(  0, -1,  0),
+	int3(  1,  0,  1),
+	int3(  1,  1,  1)
+};
 
 [numthreads(8, 8, 1)]
 void Update(int3 id : SV_DispatchThreadID)
@@ -18,74 +30,67 @@ void Update(int3 id : SV_DispatchThreadID)
 	if (!Mask[id.xy]) return;
 
 	float C = 0.6f;
-	//float C = 0.3f;
 
 	float nCount = 0;
 	float nTotal = 0;
 
-	/*
-	N	Cur	Ideal
-	0	0	0
-	1	.25	.125
-	2	.5	.25
-	3	.75	.5
-	4	1	1
-	
-	
-	
-	*/
-
-
 	int hasNeighbor;
 	int2 v;
 
+	int2 oddOffset = int2(0, -(id.x & 1));
+
+	// TODO: Cache neighbors into TGSM to minimize required memory bandwidth
+	[unroll(6)] for (int n = 1; n <= 6; n++) {
+		v = id.xy + NEIGHBOR_OFFSETS[n].xy + NEIGHBOR_OFFSETS[n].z * oddOffset;
+		hasNeighbor = Mask[v]; // Needs terrain check
+		nCount += hasNeighbor;
+		nTotal += hasNeighbor * Back[v];
+	}
+	
+	/*
+
 	// N1
-	v = id.xy + int2(0, 1);
+	v = id.xy + NEIGHBOR_OFFSETS[1].xy + NEIGHBOR_OFFSETS[1].z * oddOffset;
 	hasNeighbor = Mask[v]; // Needs terrain check
 	nCount += hasNeighbor;
 	nTotal += hasNeighbor * Back[v];
 	
 	// N2
-	v = id.xy + int2(-1, 1 - (id.x & 1));
+	v = id.xy + NEIGHBOR_OFFSETS[2].xy + NEIGHBOR_OFFSETS[2].z * oddOffset;
 	hasNeighbor = Mask[v]; // Needs terrain check
 	nCount += hasNeighbor;
 	nTotal += hasNeighbor * Back[v];
 
 	// N3
-	v = id.xy + int2(-1, -(id.x & 1));
+	v = id.xy + NEIGHBOR_OFFSETS[3].xy + NEIGHBOR_OFFSETS[3].z * oddOffset;
 	hasNeighbor = Mask[v]; // Needs terrain check
 	nCount += hasNeighbor;
 	nTotal += hasNeighbor * Back[v];
 	
 	// N4
-	v = id.xy + int2(0, -1);
+	v = id.xy + NEIGHBOR_OFFSETS[4].xy + NEIGHBOR_OFFSETS[4].z * oddOffset;
 	hasNeighbor = Mask[v]; // Needs terrain check
 	nCount += hasNeighbor;
 	nTotal += hasNeighbor * Back[v];
 	
 	// N5
-	v = id.xy + int2(1, -(id.x & 1));
+	v = id.xy + NEIGHBOR_OFFSETS[5].xy + NEIGHBOR_OFFSETS[5].z * oddOffset;
 	hasNeighbor = Mask[v]; // Needs terrain check
 	nCount += hasNeighbor;
 	nTotal += hasNeighbor * Back[v];
 	
 	// N6
-	v = id.xy + int2(1, 1 - (id.x & 1));
+	v = id.xy + NEIGHBOR_OFFSETS[6].xy + NEIGHBOR_OFFSETS[6].z * oddOffset;
 	hasNeighbor = Mask[v]; // Needs terrain check
 	nCount += hasNeighbor;
 	nTotal += hasNeighbor * Back[v];
-	
+	*/
 
 	if (nCount == 0) return;
 
-	//float nMod = 4 * pow(0.5f, 4 - nCount) / nCount;
+	// vel = 
 
 	Front[id.xy] = Back[id.xy] + 0.995f * (Back[id.xy] - Front[id.xy]) + C * C * (nTotal - nCount * Back[id.xy]); // Switch 0 to Terrain
-	//Front[id.xy] = nCount;
-}
-
-int HasNeighbor(uint2 id, uint x, uint y) {
-	return x + Res * y;
 }
 
 /*

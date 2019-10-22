@@ -5,11 +5,10 @@ using UnityEngine;
 public class Fluid : MonoBehaviour
 {
 	// TODO: Support vector sizes?
-	private Vector2 size;
-	public Vector2 Size { get { return size; } }
+	//private Vector2 size;
+	public Vector2 Size { get; private set; }
 
-	private RenderTexture heightMap;
-	public RenderTexture HeightMap { get { return heightMap; } }
+	public RenderTexture HeightMap { get; private set; }
 
 	private new MeshRenderer renderer;
 
@@ -31,24 +30,30 @@ public class Fluid : MonoBehaviour
 
 	public void Load(Vector2 sizeIn, float[,] heightDataIn, Mesh meshIn, RenderTexture heightMapIn) {
 		print("Fluid Load");
-		size = sizeIn;
+		Size = sizeIn;
 		heightData = heightDataIn;
 		this.GetComponent<MeshFilter>().mesh = meshIn;
 		renderer.material.SetInt("_Res", heightDataIn.GetLength(0));
 
-		heightMap = heightMapIn;
-		renderer.material.SetTexture("_HeightMap", heightMap);
+		HeightMap = heightMapIn;
+		SetFluidMap(HeightMap);
 
 		
 	}
 
-	public void SetHeight(RenderTexture texture) {
+	public void SetFluidMap(RenderTexture texture) {
 		//print(HeightMap.IsCreated());
-		renderer.material.SetTexture("_HeightMap", texture);
+		renderer.material.SetTexture("_FluidMap", texture);
+	}
+
+	public void SetTerrainMap(RenderTexture texture) {
+		//print(HeightMap.IsCreated());
+		renderer.material.SetTexture("_TerrainMap", texture);
 	}
 
 	public void SetMask(RenderTexture texture) {
 		//print(HeightMap.IsCreated());
 		renderer.material.SetTexture("_Mask", texture);
 	}
+
 }
