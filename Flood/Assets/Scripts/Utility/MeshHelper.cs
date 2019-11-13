@@ -5,6 +5,28 @@ using UnityEngine;
 public static class MeshHelper
 {
 
+	public static Mesh HexGridToMesh(Vector2 worldSize, HexGrid<float> hexGrid) {
+		int gridSize = hexGrid.Size;
+
+		Mesh mesh = new Mesh();
+		mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+
+		int[,] iGrid = new int[gridSize, gridSize];
+		mesh.vertices = HexGridToVerts(worldSize, hexGrid, iGrid);
+		mesh.triangles = HexGridToTris(iGrid);
+
+		Vector2[] uvs = new Vector2[mesh.vertexCount];
+		for (int ix = 0; ix < gridSize; ix++) {
+			for (int iy = 0; iy < gridSize; iy++) {
+				int v = iGrid[ix, iy];
+				if (v != -1) uvs[v] = new Vector2(ix, iy);
+			}
+		}
+
+		mesh.uv = uvs;
+
+		return mesh;
+	}
 
 	public static int[] GridTriCoords(int res) {
 		// Creating triangles.
@@ -85,20 +107,19 @@ public static class MeshHelper
 	}
 
 	// Modifies iGrid
-	public static Vector3[] HexGridToVerts(Vector2 worldSize, float[,] heightGrid, int[,] iGrid) {
-		int gridWidth = heightGrid.GetLength(0);
-		int gridHeight = heightGrid.GetLength(1);
+	public static Vector3[] HexGridToVerts(Vector2 worldSize, HexGrid<float> hexGrid, int[,] iGrid) {
+		int gridSize = hexGrid.Size;
 
-		Vector3[] outVerts = new Vector3[gridWidth * gridHeight];
+		Vector3[] outVerts = new Vector3[gridSize * gridSize];
 		//iGrid = new int[gridWidth, gridHeight];
 
 		int i = 0;
-		for (int ix = 0; ix < gridWidth; ix++) {
-			for (int iz = 0; iz < gridHeight; iz++) {
-				if (heightGrid[ix, iz] < 0) {
+		for (int ix = 0; ix < gridSize; ix++) {
+			for (int iz = 0; iz < gridSize; iz++) {
+				if (hexGrid[ix, iz] < 0) {
 					iGrid[ix, iz] = -1;
 				} else {
-					Vector3 testVert = HexToWorld(gridWidth, gridHeight, worldSize, ix, iz) + new Vector3(0, heightGrid[ix, iz], 0);
+					Vector3 testVert = HexToWorld(gridSize, gridSize, worldSize, ix, iz) + new Vector3(0, hexGrid[ix, iz], 0);
 					outVerts[i] = testVert;
 					iGrid[ix, iz] = i;
 					i++;

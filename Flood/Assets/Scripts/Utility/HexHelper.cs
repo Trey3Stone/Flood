@@ -10,25 +10,24 @@ public static class HexHelper
 
 
 
-	public static RenderTexture HexTexture(float[,] hexGrid) {
+	public static RenderTexture HexTexture(HexGrid<float> hexGrid) {
 		// TODO: Ensure that hexTexture.Release() is called.
 		// NOTE: If fluidTexture is higher res than terrainTexture, interpolation will be used for volume determination
 
-		int width = hexGrid.GetLength(0);
-		int height = hexGrid.GetLength(1);
+		int gridSize = hexGrid.Size;
 
-		RenderTexture outHex = new RenderTexture(width, height, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
+		RenderTexture outHex = new RenderTexture(gridSize, gridSize, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
 		outHex.enableRandomWrite = true;
 		outHex.filterMode = FilterMode.Point;
 		outHex.wrapMode = TextureWrapMode.Clamp;
 		
-		Texture2D blitTex = new Texture2D(width, height, TextureFormat.RFloat, false, true);
+		Texture2D blitTex = new Texture2D(gridSize, gridSize, TextureFormat.RFloat, false, true);
 
 		var texData = blitTex.GetRawTextureData<float>();
 		
 		int i = 0;
-		for (int ix = 0; ix < width; ix++) {
-			for (int iy = 0; iy < height; iy++) {
+		for (int ix = 0; ix < gridSize; ix++) {
+			for (int iy = 0; iy < gridSize; iy++) {
 				texData[i++] = hexGrid[ix, iy];
 			}
 		}
@@ -40,35 +39,84 @@ public static class HexHelper
 		return outHex;
 	}
 
-	public static RenderTexture HexMask(float[,] hexGrid) {
-		int size = hexGrid.GetLength(0);
+	public static HexGrid<byte> HexMask(HexGrid<float> hexGrid) {
+		int gridSize = hexGrid.Size;
+		HexGrid<byte> mask = new HexGrid<byte>(gridSize);
 
-		RenderTexture outMask = new RenderTexture(size, size, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
+		for (int ix = 0; ix < gridSize; ix++) {
+			for (int iy = 0; iy < gridSize; iy++) {
+				bool isFull = hexGrid[ix, iy] >= 0;
+				int maskVal = isFull ? 1 : 0;
+				for (int n = 1; n <= 6; n++) {
+					if (hexGrid.HasNeighbor(ix, iy, n) && hexGrid.GetNeighbor(ix, iy, n) >= 0) {
+						maskVal |= 1 << n;
+					} else {
+						isFull = false;
+					}
+				}
+
+				if (isFull)
+					maskVal |= 1 << 7;
+
+				mask[ix, iy] = (byte)maskVal;
+				
+			}
+		}
+
+		return mask;
+	}
+
+	public static RenderTexture HexMaskTexture(HexGrid<byte> hexGrid) {
+		int gridSize = hexGrid.Size;
+
+		RenderTexture outMask = new RenderTexture(gridSize, gridSize, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
 		outMask.enableRandomWrite = true;
 		outMask.filterMode = FilterMode.Point;
 		outMask.wrapMode = TextureWrapMode.Clamp;
 
-		Texture2D blitTex = new Texture2D(size, size, TextureFormat.RFloat, false, true);
+		Texture2D blitTex = new Texture2D(gridSize, gridSize, TextureFormat.RFloat, false, true);
 
 		var texData = blitTex.GetRawTextureData<float>();
 
+		//Debug.Log((hexGrid.Size * hexGrid.Size) + " !!! " + texData.Length);
+
 		int i = 0;
-		for (int ix = 0; ix < size; ix++) {
-			for (int iy = 0; iy < size; iy++) {
-				texData[i++] = hexGrid[ix, iy] < 0 ? 0f : 1f;
+		for (int ix = 0; ix < gridSize; ix++) {
+			for (int iy = 0; iy < gridSize; iy++) {
+
+				//texData[i++] = ((hexGrid[ix, iy] < 0) || (height > 0)) ? 0f : 1f;
+				texData[i++] = hexGrid[ix, iy];
+				//Debug.Log(new Vector2Int(ix, iy) + " = " + System.Convert.ToString(texData[i-1], 2));
 			}
 		}
 		
 
 		blitTex.Apply(); // TODO: Is this needed?
-
+		//GL.sRGBWrite = false;
 		Graphics.Blit(blitTex, outMask);
+		//outMask.Create();
 
+		/*
+		RenderTexture.active = outMask;
+		Texture2D tex = new Texture2D(gridSize, gridSize, TextureFormat.ARGB32, false, true);
+		tex.ReadPixels(new Rect(0, 0, gridSize, gridSize), 0, 0);
+		tex.Apply();
+		var texData2 = tex.GetRawTextureData<int>();
+
+		int i2 = 0;
+		for (int ix = 0; ix < gridSize; ix++) {
+			for (int iy = 0; iy < gridSize; iy++) {
+				Debug.Log(new Vector2Int(ix, iy) + " = " + System.Convert.ToString(texData2[i2++], 2));
+			}
+		}
+
+		RenderTexture.active = null;
+		*/
 		return outMask;
 	}
 
-	public static void FillHexGrid(float[,] hexGrid, int sideLength) {
-		int gridSize = hexGrid.GetLength(0);
+	public static void FillHexGrid(HexGrid<float> hexGrid, int sideLength) {
+		int gridSize = hexGrid.Size;
 
 		int xMin, xSize;
 		xMin = (sideLength - 1) / 2;
@@ -77,9 +125,7 @@ public static class HexHelper
 			for (int ix = 0; ix < gridSize; ix++) {
 				if (ix < xMin || ix >= xMin + xSize) {
 					hexGrid[ix, iy] = -1;
-				} else {
-					//hexGrid[ix, iy] = 1;
-				}
+				} // Default value is zero already
 			}
 
 			//int sign = (int)Mathf.Sign(iy - sideLength);

@@ -17,7 +17,7 @@
 
         // Physically based Standard lighting model, and enable shadows on all light types
         #pragma surface surf Standard vertex:vert fullforwardshadows addshadow
-
+			//geometry:geom 
         // Use shader model 5.0 target, to get nicer looking lighting
         #pragma target 5.0
 
@@ -39,9 +39,9 @@
 		uint _Res;
 
 		#ifdef SHADER_API_D3D11
-		Texture2D _FluidMap;
-		Texture2D _TerrainMap;
-		Texture2D _Mask;
+		Texture2D<float> _FluidMap;
+		Texture2D<float> _TerrainMap;
+		Texture2D<float> _Mask; // NOTE: Endianness is flipped for some ungodly reason
 		#endif
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
@@ -80,30 +80,42 @@
 			//uint i = round(v.texcoord.x);
 			int2 iVec = v.texcoord.xy; // UV is flipped for some reason
 
-			float height = _FluidMap[iVec.yx].r;
+			//v.vertex.y = iVec.x;
 
-			float3 offset = float3(0, height, 0);
-			v.vertex.xyz += offset;
+			float curVolume = _FluidMap[iVec.yx].r;
+			float curHeight = curVolume + _TerrainMap[iVec.yx].r;
 
-			v.normal = float3(0, 1, 0);
-			
-
-			float nCount = 0;
-			float3 nTotal = float3(0, 0, 0);
+			int2 oddOffset = int2(0, -(iVec.y & 1));
 
 			int hasNeighbor;
 			int2 nVec;
 
-			int2 oddOffset = int2(0, -(iVec.y & 1));
+			float nCount = 0;
+			float nTotalHeight = 0;
 
-			
+			uint mask = _Mask[iVec.yx].r;
 
 			[unroll(6)] for (int n = 1; n <= 6; n++) {
 				nVec = iVec.yx + NEIGHBOR_OFFSETS[n].xy + NEIGHBOR_OFFSETS[n].z * oddOffset;
-				hasNeighbor = _Mask[nVec]; // Needs terrain check
+				hasNeighbor = ((mask & (1 << n)) > 0) && (_FluidMap[nVec].r > 0) && ((_FluidMap[nVec].r + _TerrainMap[nVec].r) <= curHeight);
 				nCount += hasNeighbor;
-				nTotal += hasNeighbor * normalize((_FluidMap[nVec].r - height) * NEIGHBOR_NORMAL_LATERALS[n] + float3(0, 1, 0));
+				nTotalHeight += hasNeighbor * (_FluidMap[nVec].r + _TerrainMap[nVec].r);
 			}
+
+			float offset = (curVolume > 0) ? curHeight : (nCount > 0 ? nTotalHeight/nCount : -1);
+
+			//float offset = iVec.x;
+			//v.vertex.y = iVec.x;
+
+			v.normal = float3(0, 1, 0);
+			float3 nTotalNormal = float3(0, 0, 0);
+
+			[unroll(6)] for (int n = 1; n <= 6; n++) { // TODO: Combine this with height pass
+				nVec = iVec.yx + NEIGHBOR_OFFSETS[n].xy + NEIGHBOR_OFFSETS[n].z * oddOffset;
+				hasNeighbor = ((mask & (1 << n)) > 0) && (_FluidMap[nVec].r > 0);
+				nTotalNormal += hasNeighbor * normalize((_FluidMap[nVec].r + _TerrainMap[nVec].r - offset) * NEIGHBOR_NORMAL_LATERALS[n] + float3(0, 1, 0));
+			}
+
 
 			/*
 			// N1			
@@ -149,7 +161,17 @@
 
 			//v.vertex.xyz += normalize(nTotal);
 
-			v.normal = normalize(nTotal);
+			v.normal = normalize(nTotalNormal); // NOTE: Might cause problems if there are no neighbors
+			v.vertex.y += offset;
+
+			// fix 1, 4, 5
+
+			// CPU:	2
+			// GPU:	1
+
+			//v.vertex.y = saturate( & 1);
+
+			//v.vertex.y = saturate(((int)_Mask[iVec.yx].r) & (1<<7));
 
 			/*
 			// North
@@ -179,6 +201,9 @@
 			//v.color = half4(v.normal.x, v.normal.y, v.normal.z, 1);
 			#endif
 		}
+
+		//[maxvertexcount(5)]
+		//void geom
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {

@@ -1,9 +1,80 @@
 Base path: 'C:/Program Files/Unity/Hub/Editor/2019.2.0f1/Editor/Data', plugins path 'C:/Program Files/Unity/Hub/Editor/2019.2.0f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
 Cmd: compileComputeKernel
-  api=4 insize=2536 outsize=1252 ok=1
+  error: 1 plat 4 at FluidSim.compute(137): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5090 outsize=2951 ok=1
 Cmd: compileComputeKernel
-  api=4 insize=2565 outsize=1228 ok=1
+  error: 1 plat 4 at FluidSim.compute(138): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5161 outsize=4755 ok=1
 Cmd: compileComputeKernel
-  error: 2 plat 4 at FluidSim.compute(61): unrecognized identifier 'fsafsa'
-  api=4 insize=2587 outsize=0 ok=0
+  error: 2 plat 4 at FluidSim.compute(60): 'saturate': no matching 0 parameter intrinsic function; Possible intrinsic functions are: saturate(float|half|double|min10float|min16float)
+  error: 2 plat 4 at FluidSim.compute(60): syntax error: unexpected token ';'
+  api=4 insize=5139 outsize=0 ok=0
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(138): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5205 outsize=4755 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(86): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5519 outsize=3575 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(86): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5545 outsize=4080 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(86): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5513 outsize=3575 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(86): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5399 outsize=4044 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(86): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=4928 outsize=3695 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(95): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5040 outsize=471 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(91): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5139 outsize=471 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(92): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5496 outsize=3695 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(92): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5497 outsize=471 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(92): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  error: 2 plat 4 at FluidSim.compute(101): undeclared identifier '_DiffCount'
+  api=4 insize=5541 outsize=0 ok=0
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(92): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5557 outsize=471 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(92): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5546 outsize=4637 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(106): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5587 outsize=3695 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(108): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5710 outsize=4990 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(87): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5940 outsize=3996 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(87): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=5938 outsize=3695 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(88): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  error: 2 plat 4 at FluidSim.compute(209): syntax error: unexpected token 'vBuffer'
+  api=4 insize=6168 outsize=0 ok=0
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(88): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=6388 outsize=3695 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(88): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=6453 outsize=783 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(89): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=6561 outsize=4132 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at FluidSim.compute(89): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
+  api=4 insize=6559 outsize=783 ok=1

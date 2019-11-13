@@ -7,12 +7,12 @@ public class Fluid : MonoBehaviour
 	// TODO: Support vector sizes?
 	//private Vector2 size;
 	public Vector2 Size { get; private set; }
-
-	public RenderTexture HeightMap { get; private set; }
+	public int GridSize { get; private set; }
 
 	private new MeshRenderer renderer;
 
-	private float[,] heightData;
+	public HexGrid<float> HeightGrid { get; private set; }
+	public RenderTexture HeightMap { get; private set; }
 
 	void Awake() {
 		renderer = this.GetComponent<MeshRenderer>();
@@ -28,17 +28,28 @@ public class Fluid : MonoBehaviour
 
 	}
 
-	public void Load(Vector2 sizeIn, float[,] heightDataIn, Mesh meshIn, RenderTexture heightMapIn) {
+	public void Load(Vector2 sizeIn, HexGrid<float> heightGridIn) {
 		print("Fluid Load");
 		Size = sizeIn;
-		heightData = heightDataIn;
-		this.GetComponent<MeshFilter>().mesh = meshIn;
-		renderer.material.SetInt("_Res", heightDataIn.GetLength(0));
 
-		HeightMap = heightMapIn;
+		GridSize = heightGridIn.Size;
+
+		HeightGrid = heightGridIn;
+		HeightMap = HexHelper.HexTexture(HeightGrid);
 		SetFluidMap(HeightMap);
 
-		
+		HexGrid<float> baseGrid = new HexGrid<float>(GridSize);
+		HexHelper.FillHexGrid(baseGrid, (GridSize - 1) / 2);
+
+		Mesh mesh = MeshHelper.HexGridToMesh(Size, baseGrid);
+		mesh.RecalculateBounds();
+		mesh.RecalculateNormals();
+		mesh.RecalculateTangents();
+
+		mesh.bounds = new Bounds(Vector3.zero, mesh.bounds.extents + new Vector3(0, 1000, 0));
+		print("Fluid Mesh Bounds: " + mesh.bounds);
+
+		this.GetComponent<MeshFilter>().mesh = mesh;
 	}
 
 	public void SetFluidMap(RenderTexture texture) {
