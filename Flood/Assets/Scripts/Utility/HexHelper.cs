@@ -142,7 +142,30 @@ public static class HexHelper
 
 	}
 
-	//public static bool 
+	public static Vector2Int WorldToHex(Vector3 pos, Vector2 worldSize) {
+		return WorldToHex(new Vector2(pos.x, pos.z), worldSize);
+	}
 
+	public static Vector2Int WorldToHex(Vector2 pos, Vector2 worldSize) {
+
+		Vector2 normPos = new Vector2(pos.x, pos.y) + worldSize / 2;
+
+		int row = Mathf.RoundToInt(normPos.y / HexHelper.THETA);
+
+		int col = Mathf.RoundToInt(normPos.x + 0.5f * (1 - (row % 2)));
+
+		return new Vector2Int(col, row);
+	}
+
+	public static Vector3 HexToWorld(Vector2Int pos, World world) {
+		//Vector3 pos = MeshHelper.HexToWorld(2 * SIZE + 1, WorldManager.Self.World.Size, gridPos.x, gridPos.y);
+		//pos.y = WorldManager.Self.World.HeightGrid[gridPos];
+
+		return new Vector3(
+			world.Size.x * ((pos.x + 0.5f * (1 - (pos.y & 1))) / (world.GridSize - 1.0f) - 0.5f),
+			world.HeightGrid[pos],
+			world.Size.y * (pos.y / (world.GridSize - 1.0f) - 0.5f)
+		);
+	}
 
 }

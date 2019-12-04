@@ -119,7 +119,7 @@ public static class MeshHelper
 				if (hexGrid[ix, iz] < 0) {
 					iGrid[ix, iz] = -1;
 				} else {
-					Vector3 testVert = HexToWorld(gridSize, gridSize, worldSize, ix, iz) + new Vector3(0, hexGrid[ix, iz], 0);
+					Vector3 testVert = HexToWorld(gridSize, worldSize, ix, iz) + new Vector3(0, hexGrid[ix, iz], 0);
 					outVerts[i] = testVert;
 					iGrid[ix, iz] = i;
 					i++;
@@ -130,8 +130,8 @@ public static class MeshHelper
 		return outVerts;
 	}
 
-	public static Vector3 HexToWorld(int gridWidth, int gridHeight, Vector2 worldSize, int x, int z) {
-		return new Vector3(worldSize.x * ((x + 0.5f * (1 - (z & 1))) / (gridWidth - 1.0f) - 0.5f), 0, worldSize.y * (z / (gridHeight - 1.0f) - 0.5f));
+	public static Vector3 HexToWorld(int gridSize, Vector2 worldSize, int x, int z) {
+		return new Vector3(worldSize.x * ((x + 0.5f * (1 - (z & 1))) / (gridSize - 1.0f) - 0.5f), 0, worldSize.y * (z / (gridSize - 1.0f) - 0.5f));
 	}
 
 	public static int FlattenCoords(int rowSize, int x, int y) {

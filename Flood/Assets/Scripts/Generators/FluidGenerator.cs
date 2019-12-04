@@ -18,7 +18,7 @@ public class FluidGenerator
 		HexHelper.FillHexGrid(fluidGrid, sideLength);
 
 		//fluidMesh.RecalculateNormals();
-		
+		/*
 		float total = 0;
 		for (int ix = 0; ix < gridSize; ix++) {
 			for (int iy = 0; iy < gridSize; iy++) {
@@ -27,21 +27,16 @@ public class FluidGenerator
 				}
 				var dist = (new Vector2(gridSize / 2f, gridSize / 2f * HexHelper.THETA) - new Vector2(ix, iy * HexHelper.THETA)).magnitude;
 
-				int height = (iy < (gridSize / 6)) ? 40 : 0;
+				int height = (iy < (gridSize / 6)) ? 10 : 0;
 				fluidGrid[ix, iy] = height;
 				total += height;
-				/*if (dist < gridX / 6f) {
-					fluidGrid[ix, iy] = 20;
-					total += 10;
-				} else {
-					fluidGrid[ix, iy] = 0.1f;
-				}*/
+				
 			}
 		}
 
 		Debug.Log("TOTAL: " + total);
 		
-
+	*/
 		//fluidGrid[1,1] = 5;
 
 		outFluid.Load(fluidSize, fluidGrid);

@@ -14,8 +14,12 @@ public class FluidManager : MonoSingleton<FluidManager>
 
 	private int updateKernel;
 	private int applyKernel;
+	private int mapKernel;
 
 	private Fluid fluid;
+
+	private float[] fluidMap;
+	private ComputeBuffer mapBuffer;
 
 	enum FluidStage
 	{
@@ -58,6 +62,7 @@ public class FluidManager : MonoSingleton<FluidManager>
 		fluidSim = Resources.Load("Shaders/FluidSim") as ComputeShader;
 		updateKernel = fluidSim.FindKernel("Update");
 		applyKernel = fluidSim.FindKernel("Apply");
+		mapKernel = fluidSim.FindKernel("GetTotalVolume");
 	}
 
 	// Start is called before the first frame update
@@ -67,6 +72,7 @@ public class FluidManager : MonoSingleton<FluidManager>
 
 	// Update is called once per frame
 	void Update() {
+
 		if (GameManager.Self.Paused) return; // TODO: Make the update timer stop on pause;
 
 		if (Time.time - lastUpdateTime >= UPDATE_RATE) {
@@ -113,6 +119,8 @@ public class FluidManager : MonoSingleton<FluidManager>
 				fluidSim.SetTexture(applyKernel, "Back", fluidBuffer.Back);
 				fluidSim.Dispatch(applyKernel, 1 + fluid.GridSize / THREAD_GROUP_SIZE, 1 + fluid.GridSize / THREAD_GROUP_SIZE, 1);
 				fluid.SetFluidMap(fluidBuffer.Front);
+				SetMap();
+
 				curStage = FluidStage.Idle;
 				break;
 		}
@@ -164,12 +172,52 @@ public class FluidManager : MonoSingleton<FluidManager>
 		fluid.SetMask(WorldManager.Self.World.MaskMap);
 		fluid.SetTerrainMap(WorldManager.Self.World.HeightMap);
 
+		//fluidMap = new Texture2D(fluid.GridSize, fluid.GridSize, TextureFormat.ARGB32, false, true);
+
 		//var test = new RenderTexture(2 * size + 1, 2 * size + 1, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
 
 		lastUpdateTime = Time.time;
 
+		int count = fluid.GridSize * fluid.GridSize;
+		fluidMap = new float[count];
+		mapBuffer = new ComputeBuffer(count, sizeof(float));
 
 		//Test(size);
+	}
+	/*
+	private void SetMap() {
+		RenderTexture active = RenderTexture.active;
+		RenderTexture.active = fluidBuffer.Front;
+		fluidMap.ReadPixels(new Rect(0, 0, fluid.GridSize, fluid.GridSize), 0, 0);
+		fluidMap.Apply();
+		RenderTexture.active = active;
+	}
+	*/
+
+	private void SetMap() {
+		
+
+		//mapBuffer.SetData(vData);
+
+		fluidSim.SetBuffer(mapKernel, "vBuffer", mapBuffer);
+		fluidSim.SetTexture(mapKernel, "Front", fluidBuffer.Front);
+		fluidSim.SetTexture(mapKernel, "Mask", WorldManager.Self.World.MaskMap);
+
+		fluidSim.Dispatch(mapKernel, 1 + fluid.GridSize / THREAD_GROUP_SIZE, 1 + fluid.GridSize / THREAD_GROUP_SIZE, 1);
+
+		mapBuffer.GetData(fluidMap);
+		/*
+		for (int ix = 0; ix < fluid.GridSize; ix++) {
+			for (int iy = 0; iy < fluid.GridSize; iy++) {
+				print(fluidMap[ix + fluid.GridSize * iy] + " " + GetFluid(ix, iy));
+			}
+		}
+		*/
+		//Debug.Log("TOTAL Volume: " + volTotal);
+	}
+
+	public float GetFluid(int x, int y) {
+		return fluidMap[x + fluid.GridSize * y];
 	}
 
 	private void Test(int size) {
@@ -265,11 +313,12 @@ public class FluidManager : MonoSingleton<FluidManager>
 		}
 	}
 
-	public void AddDiff(Vector3 worldPos, float radius, float weight) {
-		AddDiff(worldPos.x + fluid.Size.x / 2, worldPos.z + fluid.Size.y / 2, radius, weight);
+	public void AddDiff(Vector2 hexPos, float radius, float weight) {
+		AddDiff(hexPos.x, hexPos.y, radius, weight);
 	}
 
 	public void AddDiff(float posX, float posY, float radius, float weight) {
+		//print("new diff");
 		Diffs.Add(new Diff(posX, posY, radius, weight));
 	}
 
@@ -316,9 +365,9 @@ public class FluidManager : MonoSingleton<FluidManager>
 
 		double volTotal = 0;
 		for (int i = 0; i < count; i++) {
+			print(vData[i]);
 			volTotal += vData[i];
 		}
-
 
 		Debug.Log("TOTAL Volume: " + volTotal);
 		//Debug.Log("TOTAL Velocity: " + (curStage == FluidStage.Idle ? 1 : -1) * vData[1] / 1000f);

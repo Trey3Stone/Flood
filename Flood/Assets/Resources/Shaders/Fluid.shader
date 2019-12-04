@@ -34,8 +34,6 @@
         half _Metallic;
         fixed4 _Color;
 
-		
-
 		uint _Res;
 
 		#ifdef SHADER_API_D3D11
@@ -43,13 +41,6 @@
 		Texture2D<float> _TerrainMap;
 		Texture2D<float> _Mask; // NOTE: Endianness is flipped for some ungodly reason
 		#endif
-
-        // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
-        // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
-        // #pragma instancing_options assumeuniformscaling
-        //UNITY_INSTANCING_BUFFER_START(Props)
-            // put more per-instance properties here
-       // UNITY_INSTANCING_BUFFER_END(Props)
 		
 		static const float THETA = 0.866025403784438646763723170752936183471402626905190314027f; // sqrt(3)/2
 		static const float3 NEIGHBOR_NORMAL_LATERALS[7] = {
@@ -72,15 +63,11 @@
 			int3(1,  0,  1),
 			int3(1,  1,  1)
 		};
-
 		
 		void vert(inout appdata_full v) {
 			#ifdef SHADER_API_D3D11
 
-			//uint i = round(v.texcoord.x);
 			int2 iVec = v.texcoord.xy; // UV is flipped for some reason
-
-			//v.vertex.y = iVec.x;
 
 			float curVolume = _FluidMap[iVec.yx].r;
 			float curHeight = curVolume + _TerrainMap[iVec.yx].r;
@@ -89,34 +76,42 @@
 
 			int hasNeighbor;
 			int2 nVec;
-
 			float nCount = 0;
+			float nLowCount = 0;
 			float nTotalHeight = 0;
 
 			uint mask = _Mask[iVec.yx].r;
 
+			// TODO: Cache neighbor values in TGSM
 			[unroll(6)] for (int n = 1; n <= 6; n++) {
 				nVec = iVec.yx + NEIGHBOR_OFFSETS[n].xy + NEIGHBOR_OFFSETS[n].z * oddOffset;
-				hasNeighbor = ((mask & (1 << n)) > 0) && (_FluidMap[nVec].r > 0) && ((_FluidMap[nVec].r + _TerrainMap[nVec].r) <= curHeight);
+				hasNeighbor = ((mask & (1 << n)) > 0) && (_FluidMap[nVec].r > 0);
 				nCount += hasNeighbor;
+				hasNeighbor = hasNeighbor && ((_FluidMap[nVec].r + _TerrainMap[nVec].r) <= curHeight);
+				nLowCount += hasNeighbor;
 				nTotalHeight += hasNeighbor * (_FluidMap[nVec].r + _TerrainMap[nVec].r);
 			}
 
-			float offset = (curVolume > 0) ? curHeight : (nCount > 0 ? nTotalHeight/nCount : -1);
-
-			//float offset = iVec.x;
-			//v.vertex.y = iVec.x;
+			float offset = (curVolume > 0) ? curHeight : -1;
 
 			v.normal = float3(0, 1, 0);
 			float3 nTotalNormal = float3(0, 0, 0);
+			nCount = 0;
 
 			[unroll(6)] for (int n = 1; n <= 6; n++) { // TODO: Combine this with height pass
 				nVec = iVec.yx + NEIGHBOR_OFFSETS[n].xy + NEIGHBOR_OFFSETS[n].z * oddOffset;
 				hasNeighbor = ((mask & (1 << n)) > 0) && (_FluidMap[nVec].r > 0);
+				nCount += hasNeighbor;
 				nTotalNormal += hasNeighbor * normalize((_FluidMap[nVec].r + _TerrainMap[nVec].r - offset) * NEIGHBOR_NORMAL_LATERALS[n] + float3(0, 1, 0));
 			}
 
+			v.normal = nTotalNormal / nCount;
+			v.vertex.y += offset;
 
+			//float offset = iVec.x;
+			//v.vertex.y = iVec.x;
+
+			//float offset = (curVolume > 0) ? curHeight : (nLowCount > 0 ? nTotalHeight/nCount : -1);
 			/*
 			// N1			
 			nVec = iVec.yx + int2(0, 1);
@@ -160,10 +155,6 @@
 			//v.vertex.y = iVec.y & 1;
 
 			//v.vertex.xyz += normalize(nTotal);
-
-			v.normal = normalize(nTotalNormal); // NOTE: Might cause problems if there are no neighbors
-			v.vertex.y += offset;
-
 			// fix 1, 4, 5
 
 			// CPU:	2

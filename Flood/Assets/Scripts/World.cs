@@ -14,6 +14,8 @@ public class World : MonoBehaviour
 	public HexGrid<byte> MaskGrid { get; private set; }
 	public RenderTexture MaskMap { get; private set; }
 
+	public HexGrid<bool> TileMap { get; private set; }
+
 	public void Load(Vector2 sizeIn, HexGrid<float> heightGridIn) {
 		print("World Load");
 		Size = sizeIn;
@@ -32,10 +34,13 @@ public class World : MonoBehaviour
 
 		MaskMap = HexHelper.HexMaskTexture(MaskGrid);
 
+		TileMap = new HexGrid<bool>(GridSize);
+
 		Mesh mesh = MeshHelper.HexGridToMesh(Size, HeightGrid);
 		mesh.RecalculateBounds();
-		mesh.RecalculateNormals();
 		mesh.RecalculateTangents();
+		mesh.RecalculateNormals();
+		mesh.UploadMeshData(false);
 
 		this.GetComponent<MeshFilter>().mesh = mesh;
 
@@ -47,8 +52,9 @@ public class World : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
-    }
+		//this.GetComponent<MeshFilter>().mesh.RecalculateNormals();
+
+	}
 
     // Update is called once per frame
     void Update()

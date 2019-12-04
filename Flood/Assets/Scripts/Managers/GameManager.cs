@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameManager : MonoSingleton<GameManager>
 {
-	public const int SIZE = 63; // Must be odd. Ideally power of 2 - 1
+	public const int SIZE = 127; // Must be odd. Ideally power of 2 - 1
 
 	public bool Paused { get; set; } = false;
 	protected override void DerivedAwake() {
@@ -13,6 +13,9 @@ public class GameManager : MonoSingleton<GameManager>
 		Debug.Assert(SIZE % 2 == 1, "Even-row offset hex arrays work best with odd size-length hexagons");
 	}
 
+	public Core Core { get; private set; } = null;
+
+
 	// Start is called before the first frame update
 	void Start()
     {
@@ -20,25 +23,72 @@ public class GameManager : MonoSingleton<GameManager>
 		FluidManager.Self.Start(SIZE); // Must occur after WorldManager start
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (Input.GetMouseButton(0) != Input.GetMouseButton(1)) {
+	// Update is called once per frame
+	void Update() {
+		//if (Input.GetMouseButton(0) != Input.GetMouseButton(1)) {
 
-			float weight = 0.1f * (Input.GetMouseButton(0) ? 1 : -1);
+		if (Core != null) {
+			if (Input.GetMouseButtonDown(0)) {
 
-			//print("Mouse Down");
-			var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+				//float weight = 0.1f * (Input.GetMouseButton(0) ? 1 : -1);
 
-			//Ray ray = new Ray(new Vector3(0, 100, 0), Vector3.down);
+				//print("Mouse Down");
+				var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-			//print(ray);
+				//Ray ray = new Ray(new Vector3(0, 100, 0), Vector3.down);
 
-			if (Physics.Raycast(ray, out RaycastHit hit)) {
-				//print("Mouse Hit: " + hit.point);
-				FluidManager.Self.AddDiff(hit.point, 4, weight);
+				//print(ray);
+
+				if (Physics.Raycast(ray, out RaycastHit hit)) {
+					//print("Mouse Hit: " + hit.point);
+					//FluidManager.Self.AddDiff(hit.point, 4, weight);
+
+					Vector2Int gridPos = HexHelper.WorldToHex(hit.point, WorldManager.Self.World.Size);
+
+					//Vector3 pos = MeshHelper.HexToWorld(2 * SIZE + 1, WorldManager.Self.World.Size, gridPos.x, gridPos.y);
+					//pos.y = WorldManager.Self.World.HeightGrid[gridPos];
+
+					//testCursor.transform.position = pos;
+
+
+					if (WorldManager.Self.CanPlace(Hive.HexSize, gridPos)) {
+						print("placed");
+						WorldManager.Self.PlaceEnt(Resources.Load<GameObject>("Prefabs/Collector"), gridPos);
+					}
+
+
+				}
+
 			}
 
+			if (Input.GetMouseButtonDown(1)) {
+				var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+				if (Physics.Raycast(ray, out RaycastHit hit)) {
+					Vector2Int gridPos = HexHelper.WorldToHex(hit.point, WorldManager.Self.World.Size);
+
+					if (WorldManager.Self.CanPlace(Hive.HexSize, gridPos)) {
+						print("placed");
+						WorldManager.Self.PlaceEnt(Resources.Load<GameObject>("Prefabs/Turret"), gridPos);
+					}
+				}
+			}
+		} else {
+			if (Input.GetMouseButtonDown(0)) {
+				var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+				if (Physics.Raycast(ray, out RaycastHit hit)) {
+
+					Vector2Int gridPos = HexHelper.WorldToHex(hit.point, WorldManager.Self.World.Size);
+
+					if (WorldManager.Self.CanPlace(Hive.HexSize, gridPos)) {
+						print("making core");
+						Core = WorldManager.Self.PlaceEnt(Resources.Load<GameObject>("Prefabs/Core"), gridPos, 2).GetComponent<Core>();
+					}
+
+
+				}
+
+			}
 		}
-    }
+	}
 }

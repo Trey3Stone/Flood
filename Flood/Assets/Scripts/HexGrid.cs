@@ -44,6 +44,10 @@ public class HexGrid<T>
 		return this[nVec.x, nVec.y];
 	}
 
+	public void SetNeighbor(int x, int y, int n, T val) {
+		this[NeighborCoords(x, y, n)] = val;
+	}
+
 	public bool HasNeighbor(int x, int y, int n) {
 		Vector2Int nVec = NeighborCoords(x, y, n);
 		return (nVec.x >= 0 && nVec.x < Size) && (nVec.y >= 0 && nVec.y < Size);
