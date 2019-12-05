@@ -5,7 +5,7 @@ using UnityEngine;
 public class Collector : Entity {
 	// Start is called before the first frame update
 
-	const float COLLECTION_RATE = 0.1f;
+	const float COLLECTION_RATE = 0.4f;
 
 
 	void Start() {

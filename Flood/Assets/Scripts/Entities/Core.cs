@@ -6,8 +6,11 @@ public class Core : Entity
 {
 	// Start is called before the first frame update
 
-	float Capacity = 500;
-	public float Contents { get; private set; }
+	const float GEN_RATE = 0.8f;
+
+	public const float Capacity = 500;
+	public float Contents { get; private set; } = 50;
+
 
 
 	void Start() {
@@ -19,6 +22,9 @@ public class Core : Entity
 	void Update()
     {
 
+		print(Capacity);
+
+		Deposit(GEN_RATE * Time.deltaTime);
 
 		CheckDamage();
 	}

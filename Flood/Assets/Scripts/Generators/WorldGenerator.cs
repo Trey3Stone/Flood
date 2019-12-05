@@ -82,7 +82,7 @@ public static class WorldGenerator {
 
 		}
 
-		float total = 0;
+		double total = 0;
 		float count = 0;
 		
 		for (int ix = 0; ix < gridSize; ix++) {
@@ -100,6 +100,8 @@ public static class WorldGenerator {
 			}
 		}
 
+		float average = (float)(total / count);
+
 		for (int ix = 0; ix < gridSize; ix++) {
 			for (int iy = 0; iy < gridSize; iy++) {
 				if (heightGrid[ix, iy] < 0)
@@ -109,7 +111,7 @@ public static class WorldGenerator {
 
 				
 
-				heightGrid[ix, iy] = Mathf.Lerp(total / count, heightGrid[ix, iy], Mathf.Clamp01((pos.magnitude - 0.2f * GameManager.SIZE)/ 10) + 0.2f);
+				heightGrid[ix, iy] = Mathf.Lerp(average - 1.0f, heightGrid[ix, iy], Mathf.Clamp01((pos.magnitude - 0.15f * GameManager.SIZE)/ 10) + 0.2f);
 			}
 		}
 
@@ -155,14 +157,14 @@ public static class WorldGenerator {
 	}
 
 	public static void SpawnHives(World world) {
-		int hivesLeft = (int) (Mathf.Pow(GameManager.SIZE, 2) / 200.0f);
+		int hivesLeft = (int) (Mathf.Pow(GameManager.SIZE, 2) / 400.0f);
 
 		float rad = world.GridSize / 2 * HexHelper.THETA;
 
 
 		while (hivesLeft > 0) {
 			float ang = Random.Range(0.0f, 2*Mathf.PI);
-			float dist = Random.Range(0.4f, 1.0f) * rad;
+			float dist = Random.Range(0.5f, 1.0f) * rad;
 
 			Vector2 pos = dist * new Vector2(Mathf.Cos(ang), Mathf.Sin(ang));
 

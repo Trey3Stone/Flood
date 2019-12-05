@@ -1,65 +1,6 @@
 Base path: 'C:/Program Files/Unity/Hub/Editor/2019.2.12f1/Editor/Data', plugins path 'C:/Program Files/Unity/Hub/Editor/2019.2.12f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8387 outsize=6090 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8456 outsize=6218 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8526 outsize=783 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8567 outsize=783 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  error: 2 plat 4 at FluidSim.compute(128): syntax error: unexpected token 'nVel'
-  api=4 insize=8572 outsize=0 ok=0
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8516 outsize=6826 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8522 outsize=783 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8533 outsize=3743 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8578 outsize=6862 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8608 outsize=6890 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(119): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8556 outsize=783 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at FluidSim.compute(121): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used
-  api=4 insize=8546 outsize=783 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=9170 outsize=783 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=9173 outsize=3743 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=9169 outsize=783 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=9185 outsize=3769 ok=1
-Cmd: compileComputeKernel
-  error: 2 plat 4 at FluidSim.compute(122): undeclared identifier 'nCount'
-  api=4 insize=9179 outsize=0 ok=0
-Cmd: compileComputeKernel
-  api=4 insize=9178 outsize=3743 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=9353 outsize=655 ok=1
 Cmd: compileSnippet
-  error: 1 plat 4 at (117): 'n': loop control variable conflicts with a previous declaration in the outer scope; most recent declaration will be used\nCompiling Vertex program with UNITY_PASS_FORWARDBASE DIRECTIONAL SHADOWS_SCREEN LIGHTPROBE_SH
-Platform defines: UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR
-  api=4 type=0 insize=31110 outsize=5190 kw=UNITY_PASS_FORWARDBASE DIRECTIONAL SHADOWS_SCREEN LIGHTPROBE_SH pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
-Cmd: initializeCompiler
-Cmd: compileComputeKernel
-  api=4 insize=18299 outsize=8738 ok=1
+  api=4 type=1 insize=1548 outsize=1230 kw=UNITY_PASS_DEFERRED _EMISSION pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
 Cmd: compileSnippet
-  api=4 type=1 insize=914 outsize=478 kw= pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=11538 outsize=538 kw=BLOOM FINALPASS COLOR_GRADING_HDR_3D pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
+  api=4 type=1 insize=109392 outsize=1550 kw=UNITY_PASS_PREPASSFINAL pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1

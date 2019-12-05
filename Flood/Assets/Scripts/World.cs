@@ -44,6 +44,8 @@ public class World : MonoBehaviour
 
 		this.GetComponent<MeshFilter>().mesh = mesh;
 
+		//Invoke("Recalculate", 0.5f);
+
 		var collider = this.GetComponent<MeshCollider>();
 		collider.sharedMesh = mesh;
 
@@ -61,4 +63,12 @@ public class World : MonoBehaviour
     {
         
     }
+
+	public void Recalculate() {
+		print("rc");
+		this.GetComponent<MeshFilter>().mesh.RecalculateBounds();
+		this.GetComponent<MeshFilter>().mesh.RecalculateTangents();
+		this.GetComponent<MeshFilter>().mesh.RecalculateNormals();
+		this.GetComponent<MeshFilter>().mesh.UploadMeshData(false);
+	}
 }

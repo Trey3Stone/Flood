@@ -116,7 +116,7 @@ void Update(int3 id : SV_DispatchThreadID)
 	float delta = nLowCount * curHeight - nTotal;
 	//float offer = ((curVolume / nLowCount) > 0.01) * saturate(mask & 1) * C * clamp(delta, 0, clamp(curHeight - (curHeight + nTotal) / (nLowCount + 1), 0, curVolume)); // TODO: Rewrite
 	//float offer = ((curVolume / nLowCount) > 0.01) * saturate(mask & 1) * C * clamp(delta, 0, max(0, curVolume));
-	float offer = ((curVolume / nLowCount) > 0.05) * C * (delta / (2 * nLowCount));
+	float offer = ((curVolume / nLowCount) > 0.04) * C * (delta / (2 * nLowCount));
 	offer = min((curVolume < 0.01 ? curVolume : curVolume - 0.01), offer);// *(offer / nLowCount > 0.01);
 	//(curVolume > 0 ? 1.0f : 0.1f) *
 	

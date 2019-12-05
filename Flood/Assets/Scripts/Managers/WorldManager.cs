@@ -61,7 +61,7 @@ public class WorldManager : MonoSingleton<WorldManager>
 		if (platformSize > 0) {
 			GameObject platform = GameObject.Instantiate<GameObject>(Resources.Load<GameObject>("Prefabs/Platform"), pos, Quaternion.identity, outEnt.transform);
 			platform.transform.localScale = new Vector3(platformSize, 1, platformSize);
-			outEnt.transform.localPosition += new Vector3(0, 0.5f, 0);
+			outEnt.transform.localPosition += new Vector3(0, 0.1f, 0);
 		}
 
 		return outEnt;

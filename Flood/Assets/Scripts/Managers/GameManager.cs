@@ -15,12 +15,17 @@ public class GameManager : MonoSingleton<GameManager>
 
 	public Core Core { get; private set; } = null;
 
+	[SerializeField]
+	private GameObject UnitMenu;
 
 	// Start is called before the first frame update
 	void Start()
     {
 		WorldManager.Self.Create(SIZE);
 		FluidManager.Self.Start(SIZE); // Must occur after WorldManager start
+
+		Application.targetFrameRate = 120;
+
     }
 
 	// Update is called once per frame
@@ -52,8 +57,9 @@ public class GameManager : MonoSingleton<GameManager>
 
 
 					if (WorldManager.Self.CanPlace(Hive.HexSize, gridPos)) {
-						print("placed");
-						WorldManager.Self.PlaceEnt(Resources.Load<GameObject>("Prefabs/Collector"), gridPos);
+						if (Core.Withdraw(10)) {
+							WorldManager.Self.PlaceEnt(Resources.Load<GameObject>("Prefabs/Collector"), gridPos);
+						}
 					}
 
 
@@ -67,8 +73,9 @@ public class GameManager : MonoSingleton<GameManager>
 					Vector2Int gridPos = HexHelper.WorldToHex(hit.point, WorldManager.Self.World.Size);
 
 					if (WorldManager.Self.CanPlace(Hive.HexSize, gridPos)) {
-						print("placed");
-						WorldManager.Self.PlaceEnt(Resources.Load<GameObject>("Prefabs/Turret"), gridPos);
+						if (Core.Withdraw(20)) {
+							WorldManager.Self.PlaceEnt(Resources.Load<GameObject>("Prefabs/Turret"), gridPos);
+						}
 					}
 				}
 			}
@@ -83,6 +90,7 @@ public class GameManager : MonoSingleton<GameManager>
 					if (WorldManager.Self.CanPlace(Hive.HexSize, gridPos)) {
 						print("making core");
 						Core = WorldManager.Self.PlaceEnt(Resources.Load<GameObject>("Prefabs/Core"), gridPos, 2).GetComponent<Core>();
+						UnitMenu.SetActive(true);
 					}
 
 
