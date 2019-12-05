@@ -22,8 +22,6 @@ public class Core : Entity
 	void Update()
     {
 
-		print(Capacity);
-
 		Deposit(GEN_RATE * Time.deltaTime);
 
 		CheckDamage();
