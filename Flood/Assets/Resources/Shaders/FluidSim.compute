@@ -1,0 +1,398 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Update
+#pragma kernel Apply
+#pragma kernel GetTotalVolume
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+struct Diff
+{
+	float2 pos;
+
+	float radius;
+	float weight;
+};
+
+RWTexture2D<float> Front;
+RWTexture2D<float> Back;
+RWTexture2D<float2> Delta; // float2(offer/diff, deltaRel, deltaAbs)
+RWTexture2D<float> Terrain;
+RWTexture2D<float> Mask; // NOTE: Endianness is flipped for some ungodly reason
+
+StructuredBuffer<Diff> Diffs;
+uniform int DiffCount;
+
+// int3(x, y, useOddOffset)
+static const int3 NEIGHBOR_OFFSETS[7] = {
+	int3(  0,  0,  0),
+	int3(  0,  1,  0),
+	int3( -1,  1,  1),
+	int3( -1,  0,  1),
+	int3(  0, -1,  0),
+	int3(  1,  0,  1),
+	int3(  1,  1,  1)
+};
+
+static const float C = 0.4f;
+static const int LOCAL_VEL_WEIGHT = 4;
+
+[numthreads(32, 32, 1)]
+void Update(int3 id : SV_DispatchThreadID)
+{
+	uint mask = (uint)Mask[id.xy];
+	if (!(mask & 1)) return;
+
+	float curVolume = Back[id.xy];
+	float curHeight = curVolume + Terrain[id.xy];
+
+	int2 oddOffset = int2(0, -(id.x & 1));
+	float nHeight;
+	int2 v;
+	
+	
+
+	//curVolume += velocity;
+	//curHeight = curVolume + Terrain[id.xy];
+
+	int nLowCount = 0;
+	int nHighCount = 0;
+	float nTotal = 0;
+	int hasLowNeighbor;
+
+	// TODO: Cache neighbors into TGSM to minimize required memory bandwidth
+
+	// 8 1 3
+	//   8
+	// 1 1 8
+
+	//avg: 30/7
+
+
+	// ncount = 6
+	// ntotal = 24
+	// offer = 6
+	
+	// Determine fluid offering and populate nVals
+
+
+	// TODO: CONVERT TO NEW AVERAGING SYSTEM
+
+	
+	[unroll(6)] for (int n = 1; n <= 6; n++) {
+		v = id.xy + NEIGHBOR_OFFSETS[n].xy + NEIGHBOR_OFFSETS[n].z * oddOffset;
+		nHeight = Back[v] + Terrain[v];
+		hasLowNeighbor = saturate(mask & (1 << n)) && (nHeight < curHeight);
+		nLowCount += hasLowNeighbor;
+		nHighCount += saturate(mask & (1 << n)) && (nHeight > curHeight);
+		nTotal += hasLowNeighbor * nHeight;
+	}
+	
+	/*
+	nHeight = 0;
+	float tmpHeight;
+	int nCount = 0;
+	int hasNeighbor;
+	[unroll(7)] for (int n = 0; n <= 6; n++) {
+		v = id.xy + NEIGHBOR_OFFSETS[n].xy + NEIGHBOR_OFFSETS[n].z * oddOffset;
+		hasNeighbor = saturate(mask & (1 << n));// *(Back[v] != Front[v]);
+
+		nCount = countbits(((uint)Mask[v]) & (0x7F));
+		tmpHeight = (Back[v] + Terrain[v]) / nCount;// * ((Terrain[v] + Back[v]) / curHeight);
+		//hasNeighbor = hasNeighbor * (tmpVel > 0.001 || (Terrain[v] + Back[v]) <= curHeight);
+
+
+		nHeight += hasNeighbor * (isnan(tmpHeight) ? 0 : tmpHeight);
+	}
+	
+	*/
+
+	//Front[id.xy] = nCount;
+
+	//if (nCount == 0) return;
+
+	// TODO: Max offer out at the amount that will average cur with neighbors (maybe)
+	// Let velApply deal with waves
+	float delta = nLowCount * curHeight - nTotal;
+	//float offer = ((curVolume / nLowCount) > 0.01) * saturate(mask & 1) * C * clamp(delta, 0, clamp(curHeight - (curHeight + nTotal) / (nLowCount + 1), 0, curVolume)); // TODO: Rewrite
+	//float offer = ((curVolume / nLowCount) > 0.01) * saturate(mask & 1) * C * clamp(delta, 0, max(0, curVolume));
+	float offer = ((curVolume / nLowCount) > 0.04) * C * (delta / (2 * nLowCount));
+	offer = min((curVolume < 0.01 ? curVolume : curVolume - 0.01), offer);// *(offer / nLowCount > 0.01);
+	//(curVolume > 0 ? 1.0f : 0.1f) *
+	
+	//offer = curHeight - nHeight;
+
+	if (nLowCount == 0) {
+		offer = 0;
+	}
+	//float offer = C * clamp(delta, 0, max(0, curVolume));
+	/*
+	if (offer - velocity > curVolume) {
+		velocity = 0;
+		offer += (offer - velocity - curVolume);
+	}
+	*/
+	
+	float offerRatio = offer / delta;
+
+	/*
+	float nVel = 0;
+	float tmpVel;
+	int nCount = 0;
+	int hasNeighbor;
+	[unroll(7)] for (int n = 0; n <= 6; n++) {
+		v = id.xy + NEIGHBOR_OFFSETS[n].xy + NEIGHBOR_OFFSETS[n].z * oddOffset;
+		hasNeighbor = saturate(mask & (1 << n));// *(Back[v] != Front[v]);
+		
+		nCount = countbits(((uint)Mask[v]) & (0x7F));
+		tmpVel = (Back[v] - Front[v]) / nCount;// * ((Terrain[v] + Back[v]) / curHeight);
+		//hasNeighbor = hasNeighbor * (tmpVel > 0.001 || (Terrain[v] + Back[v]) <= curHeight);
+
+
+		nVel += hasNeighbor * (isnan(tmpVel) ? 0 : tmpVel);
+	}
+
+/*
+
+	2---------1
+   /           \
+  /             \
+ /               \
+1        5        1
+ \               /
+  \             /
+   \           /
+	1---------1
+	
+	12
+
+	nCount	nVel
+	0		0
+
+
+
+	
+*/
+
+
+	//Front[id.xy] = test;
+
+	/*
+	
+		float nVel = 0;
+	int nCount = 0;
+	int hasNeighbor;
+	[unroll(6)] for (int n = 1; n <= 6; n++) {
+		v = id.xy + NEIGHBOR_OFFSETS[n].xy + NEIGHBOR_OFFSETS[n].z * oddOffset;
+		//nHeight = Back[v] + Terrain[v];
+		hasNeighbor = saturate(mask & (1 << n));// && (Back[v] > 0);
+		nCount += hasNeighbor;
+		nVel += hasNeighbor * (Back[v] - Front[v]);
+	}
+	
+	*/
+
+
+	//float velocity = (((nVel / nCount) + 4 * (curVolume - Front[id.xy])) / 5);
+	//float velocity = (((nVel / nCount) + 4 * (curVolume - Front[id.xy])) / 5);
+
+	//float velocity = curVolume - Front[id.xy];
+	//velocity = velocity - (nCount * velocity - nVel) / (2 * nCount);
+
+	//float velocity = (curVolume - Front[id.xy]);
+	float velocity = 0;//nVel;//(curVolume != Front[id.xy]) * nVel;
+	//velocity = 0;
+	
+
+	float diffTotal = 0;
+	int hasDiff = 0;
+	for (int i = 0; i < DiffCount; i++) {
+		Diff diff = Diffs[i];
+		float dist = distance(id.xy, diff.pos.yx);
+		//int isInRange = all(id.xy > (diff.pos - diff.radius)) && all(id.xy < (diff.pos + diff.radius));
+		int isInRange = dist < diff.radius;
+		hasDiff = saturate(hasDiff + isInRange);
+
+		diffTotal += isInRange * ((1 - dist / diff.radius) * diff.weight);
+	}
+
+	//Front[id.xy] = abs(diffTotal);
+
+	diffTotal = hasDiff * max(-(curVolume - offer), diffTotal); // Can't delete more fluid than currently exists
+	//diffTotal = 0;
+
+	//curVolume += diffTotal;
+	//Back[id.xy] += diffTotal;
+	//Front[id.xy] += diffTotal;
+
+	Delta[id.xy] = float2(offerRatio, velocity - offer + diffTotal);
+
+}
+
+[numthreads(8, 8, 1)]
+void Apply(int3 id : SV_DispatchThreadID)
+{
+	uint mask = (uint)Mask[id.xy];
+	if (!(mask & 1)) return;
+
+	float curVolume = Back[id.xy];
+	float curHeight = Back[id.xy] + Terrain[id.xy];
+
+	float dTotal = 0;
+
+	int hasHighNeighbor;
+	int2 v;
+
+	int2 oddOffset = int2(0, -(id.x & 1)); // TODO: Negate and change to evenOffset
+
+	float nHeight;
+
+	// Delta -> single channel (Delta.r = offer/ntotal)
+
+	// Accept offerings
+	[unroll(6)] for (int n = 1; n <= 6; n++) {
+		v = id.xy + NEIGHBOR_OFFSETS[n].xy + NEIGHBOR_OFFSETS[n].z * oddOffset;
+		nHeight = Back[v] + Terrain[v];
+		hasHighNeighbor = saturate(mask & (1 << n)) && (nHeight > curHeight);
+		if (isfinite(Delta[v].r)) {
+			dTotal += hasHighNeighbor * (nHeight - curHeight) * Delta[v].r;
+			//saturate((nHeight - curHeight) / Delta[v].r) * Delta[v].g;
+		}
+		//GroupMemoryBarrierWithGroupSync();
+	}
+
+	// NOTE: Flickering may be due to disagreement on neighbor count between Update and Apply
+
+
+	// TODO: Move to Update
+
+	
+
+	//if (isnan(dTotal)) {
+	//	Fluid[id.xy] = -20;
+	//}
+	//else {
+	//float velocity = (nVel + nCount * (curVolume - Front[id.xy])) / (2*nCount);//0.96f * (curVolume - Front[id.xy]);
+	
+	//velocity = sign(velocity) * min(sqrt(abs(velocity)), abs(velocity));
+	//float newVolume = curVolume + dTotal - min(Delta[id.xy].g, curVolume);
+	float newVolume = curVolume + dTotal + Delta[id.xy].g;
+	//float velocity = 0.9f * (newVolume - Front[id.xy]);
+	int isEmpty = abs(newVolume) < 0.001 && abs(Front[id.xy]) < 0.001 && abs(Back[id.xy]) < 0.001;
+
+	Front[id.xy] = newVolume;
+
+	//Front[id.xy] = Delta[id.xy].g;
+	//Front[id.xy] = saturate(mask & (1 << 1));
+	
+	//Back[id.xy] = isNotEmpty * curVolume;
+
+	//Fluid[id.xy] += dTotal - min(Delta[id.xy].g, curVolume);
+
+	//}
+
+	//Fluid[id.xy] = Mask[id.xy];//Delta[id.xy].g;
+	//Delta[id.xy] = int2(0, 0);
+}
+
+
+/*
+RWStructuredBuffer<int> vBuffer;
+[numthreads(8, 8, 1)]
+void GetTotalVolume2(int3 id : SV_DispatchThreadID) {
+	InterlockedAdd(vBuffer[0], (int)(1000/2*(Front[id.xy] + Back[id.xy])));
+	InterlockedAdd(vBuffer[1], (int)(1000 * (Front[id.xy] - Back[id.xy])));
+}
+*/
+RWStructuredBuffer<float> vBuffer;
+
+[numthreads(8, 8, 1)]
+void GetTotalVolume(int3 id : SV_DispatchThreadID) {
+	uint mask = (uint)Mask[id.xy];
+	if (!(mask & 1)) return;
+
+	float vol = Front[id.xy];
+	//float vel = (Front[id.xy] - Back[id.xy]);
+
+	uint count;
+	uint stride;
+
+	vBuffer.GetDimensions(count, stride);
+	int rowSize = sqrt((float)count);
+
+	vBuffer[id.y + id.x * rowSize] = vol;
+}
+
+/*
+    5---------6
+   /           \
+  /             \
+ /               \
+4        0        1
+ \               /
+  \             /
+   \           /
+    3---------2
+
+
+
+	2---------1
+   /           \
+  /             \
+ /               \
+1        *        1
+ \               /
+  \             /
+   \           /
+	1---------1
+
+	foreach v in NEIGHBORS_AND_SELF
+		total += v / (v.nCount + 1)
+
+	//total /= nCount
+
+	1
+
+	1
+	1
+	1
+	4/3
+	4/3
+	4/3
+
+
+
+	3 * 3 / 3 + 3 * 4 / 3
+
+	8/7 + (22)/4
+	8/7 + (12)/4
+	8/7 + (12)/4
+	8/7 + (10)/4
+	8/7 + (10)/4
+	8/7 + (10)/4
+	8/7 + (12)/4
+
+	8 + (88)/4
+
+	30/7
+
+	8 - 26/8
+	3 + 8/6
+	8 - 12/4
+	1 + 14/4
+	1 + 14/4
+	8 - 14/4
+	1 + 16/6
+
+	8 - 78/24
+	3 + 32/24
+	8 - 72/24
+	1 + 84/24
+	1 + 84/24
+	8 - 84/24
+	1 + 64/24
+
+	125/4
+
+
+*/
